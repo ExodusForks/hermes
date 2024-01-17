@@ -16,6 +16,7 @@
 
 #include <cstdio>
 #include <string>
+#include <cassert>
 
 namespace hermes {
 
