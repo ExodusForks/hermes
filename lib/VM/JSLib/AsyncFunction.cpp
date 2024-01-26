@@ -17,8 +17,7 @@ namespace vm {
 /// 26.7.1.1 AsyncFunction ( p1, p2, … , pn, body )
 CallResult<HermesValue>
 asyncFunctionConstructor(void *, Runtime &runtime, NativeArgs args) {
-  /// 3. Return CreateDynamicFunction(C, NewTarget, async, args).
-  return createDynamicFunction(runtime, args, DynamicFunctionKind::Async);
+  return runtime.raiseSyntaxError("function constructor disabled in Hermes due to security reasons");
 }
 
 Handle<JSObject> createAsyncFunctionConstructor(Runtime &runtime) {

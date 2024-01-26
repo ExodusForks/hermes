@@ -85,7 +85,7 @@ Handle<JSObject> createFunctionConstructor(Runtime &runtime) {
 
 CallResult<HermesValue>
 functionConstructor(void *, Runtime &runtime, NativeArgs args) {
-  return createDynamicFunction(runtime, args, DynamicFunctionKind::Normal);
+  return runtime.raiseSyntaxError("function constructor disabled in Hermes due to security reasons");
 }
 
 CallResult<HermesValue>

@@ -127,14 +127,7 @@ CallResult<HermesValue> directEval(
 }
 
 CallResult<HermesValue> eval(void *, Runtime &runtime, NativeArgs args) {
-  GCScope gcScope(runtime);
-
-  if (!args.getArg(0).isString()) {
-    return args.getArg(0);
-  }
-
-  return directEval(
-      runtime, args.dyncastArg<StringPrimitive>(0), {}, false, false);
+  return runtime.raiseSyntaxError("function constructor disabled in Hermes due to security reasons");
 }
 
 } // namespace vm
