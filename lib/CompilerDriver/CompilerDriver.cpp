@@ -1958,8 +1958,7 @@ CompileResult processSourceFiles(
 
   // If the user requests to output a source map, then do not also emit debug
   // info into the bytecode.
-  genOptions.stripDebugInfoSection =
-      cl::OutputSourceMap || cl::DebugInfoLevel == cl::DebugLevel::g0;
+  genOptions.stripDebugInfoSection = false;
 
   genOptions.stripFunctionNames = cl::StripFunctionNames;
 
