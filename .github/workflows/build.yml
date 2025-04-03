@@ -59,6 +59,7 @@ jobs:
         key: v4-repo-${{ github.sha }}
         path: |-
           build_iphoneos
+          build_catalyst
           build_iphonesimulator
           destroot
     - name: Set up workspace
@@ -88,6 +89,7 @@ jobs:
         key: v4-repo-${{ github.sha }}
         path: |-
           build_iphoneos
+          build_catalyst
           build_iphonesimulator
           destroot
     - name: Set up workspace
