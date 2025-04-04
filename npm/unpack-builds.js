@@ -124,10 +124,6 @@ var inputs = [
     dest: "android"
   },
   {
-    name: "hermes-cli-windows.tar.gz",
-    dest: "win64-bin"
-  },
-  {
     name: "hermes-cli-linux.tar.gz",
     dest: "linux64-bin"
   },

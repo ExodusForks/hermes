@@ -183,88 +183,12 @@ jobs:
       with:
         name: apple-runtime
         path: /tmp/hermes/output/
-  windows:
-    runs-on: windows-2019
-    env:
-      HERMES_WS_DIR: C:\tmp\hermes
-      ICU_URL: https://github.com/unicode-org/icu/releases/download/release-64-2/icu4c-64_2-Win64-MSVC2017.zip
-      MSBUILD_DIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin
-      CMAKE_DIR: C:\Program Files\CMake\bin
-      RELEASE_FLAGS: "-DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=True -DHERMES_ENABLE_WIN10_ICU_FALLBACK=OFF"
-      TAR_NAME: hermes-cli-windows.tar.gz
-    steps:
-    - uses: actions/checkout@v4.1.0
-    - name: Set up workspace
-      run: |-
-        New-Item -ItemType Directory $Env:HERMES_WS_DIR
-        New-Item -ItemType Directory $Env:HERMES_WS_DIR\icu
-        New-Item -ItemType Directory $Env:HERMES_WS_DIR\staging
-        New-Item -ItemType Directory $Env:HERMES_WS_DIR\output
-        New-Item -ItemType SymbolicLink -Target $Env:GITHUB_WORKSPACE -Path $Env:HERMES_WS_DIR -Name hermes
-    - name: Download ICU
-      run: |-
-        cd $Env:HERMES_WS_DIR\icu
-        # If Invoke-WebRequest shows a progress bar, it will fail with
-        #   Win32 internal error "Access is denied" 0x5 occurred [...]
-        $progressPreference = 'silentlyContinue'
-        Invoke-WebRequest -Uri "$Env:ICU_URL" -OutFile "icu.zip"
-        Expand-Archive -Path "icu.zip" -DestinationPath "."
-    - name: Setup cmake
-      uses: jwlawson/actions-setup-cmake@v2.0.0
-      with:
-        cmake-version: 3.14.7
-    - name: Setup python
-      uses: actions/setup-python@v5.0.0
-      with:
-        python-version: 3.12.1
-    - name: Assemble Windows runtime dependencies
-      run: |-
-        cd $Env:HERMES_WS_DIR
-        Copy-Item -Path "icu\bin64\icu*.dll" -Destination "staging"
-        # Include MSVC++ 2015 redistributables
-        Copy-Item -Path "c:\windows\system32\msvcp140.dll" -Destination "staging"
-        Copy-Item -Path "c:\windows\system32\vcruntime140.dll" -Destination "staging"
-        Copy-Item -Path "c:\windows\system32\vcruntime140_1.dll" -Destination "staging"
-    - name: Build Windows CLI
-      run: |-
-        $Env:PATH += ";$Env:MSBUILD_DIR"
-        $Env:ICU_ROOT = "$Env:HERMES_WS_DIR\icu"
-        cd $Env:HERMES_WS_DIR
-        cmake -S hermes -B build -G 'Visual Studio 16 2019' -Ax64 -DHERMES_ENABLE_DEBUGGER=False $Env:RELEASE_FLAGS
-        if (-not $?) { throw "Failed to configure Hermes" }
-        cmake -S hermes -B build_hdb -G 'Visual Studio 16 2019' -Ax64 $Env:RELEASE_FLAGS
-        if (-not $?) { throw "Failed to configure Hermes" }
-        cmake --build ./build --config Release -- -m /p:UseMultiToolTask=true -m /p:EnforceProcessCountAcrossBuilds=true
-        if (-not $?) { throw "Failed to build Hermes" }
-        cmake --build ./build_hdb --config Release --target hdb -- -m /p:UseMultiToolTask=true -m /p:EnforceProcessCountAcrossBuilds=true
-        if (-not $?) { throw "Failed to build Hermes" }
-    - name: Create CLI tarball
-      run: |-
-        cd $Env:HERMES_WS_DIR
-        Copy-Item -Path "build\bin\Release\hermes.exe" -Destination "staging"
-        Copy-Item -Path "build\bin\Release\hvm.exe" -Destination "staging"
-        Copy-Item -Path "build\bin\Release\hbcdump.exe" -Destination "staging"
-        Copy-Item -Path "build\bin\Release\hermesc.exe" -Destination "staging"
-        Copy-Item -Path "build_hdb\bin\Release\hdb.exe" -Destination "staging"
-        cd staging
-        cmake -E tar zcf ..\output\$Env:TAR_NAME .
-    - name: Checksum artifacts
-      run: |-
-        cd $Env:HERMES_WS_DIR\output
-        $hash = Get-FileHash -Path $Env:TAR_NAME -Algorithm SHA256
-        Write-Output ($hash.Hash + "  " + $Env:TAR_NAME) |
-              Out-File -Encoding ASCII -FilePath ($Env:TAR_NAME +".sha256")
-    - uses: actions/upload-artifact@v4.3.1
-      with:
-        name: windows-hermes
-        path: c:\tmp\hermes\output
   npm:
     runs-on: ubuntu-20.04
     needs:
     - android
     - linux
     - package-apple-runtime
-    - windows
     - macos
     env:
       YARN: yarnpkg
@@ -285,7 +209,6 @@ jobs:
         ls -lR
         cd npm
         cp ../macos-hermes/* .
-        cp ../windows-hermes/* .
         cp ../android-hermes/* .
         cp ../apple-runtime/* .
         cp ../linux-hermes/* .
