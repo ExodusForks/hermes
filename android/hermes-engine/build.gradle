@@ -96,6 +96,7 @@ android {
   // Allow using prefab so that we can import libfbjni.so.
   buildFeatures {
     prefab true
+    prefabPublishing true
   }
 
   dependencies {
@@ -109,6 +110,13 @@ android {
     exclude "**/libc++_shared.so"
     exclude "**/libjsi.so"
     exclude "**/libfbjni.so"
+  }
+
+  prefab {
+    libhermes {
+      headers "$buildDir/../outputs/include"
+      libraryName "libhermes"
+    }
   }
 
   afterEvaluate {
