@@ -1,0 +1,232 @@
+name: facebook/hermes/build
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+jobs:
+  android:
+    runs-on: ubuntu-22.04
+    env:
+      HERMES_WS_DIR: ${{ github.workspace }}
+    steps:
+    - name: Set up workspace and install dependencies
+      run: |-
+        yes | sdkmanager "cmake;3.22.1" &
+        sudo apt update && sudo apt install -y libicu-dev
+    - uses: actions/checkout@v4.1.0
+      with:
+        path: hermes
+    - name: Build Hermes Compiler
+      run: |-
+        cmake -S hermes -B build
+        # Build the Hermes compiler so that the cross compiler build can
+        # access it to build the VM
+        cmake --build ./build --target hermesc -j 4
+    - name: Build Hermes for Android
+      run: |-
+        cd hermes/android
+        ./gradlew githubRelease
+    - name: Copy artifacts
+      run: |-
+        mkdir output
+        cp build_android/distributions/hermes-runtime-android-*.tar.gz output
+    - name: Checksum artifacts
+      run: |-
+        cd output
+        for file in *
+        do
+          sha256sum "$file" > "$file.sha256"
+        done
+    - uses: actions/upload-artifact@v4.3.1
+      with:
+        name: android-hermes
+        path: output
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Install dependencies
+      run: |-
+        sudo apt update
+        sudo apt install -y git openssh-client cmake build-essential \
+            libreadline-dev libicu-dev zip python3
+    - uses: actions/checkout@v4.1.0
+      with:
+        path: hermes
+    - name: Build linux CLI
+      run: |-
+        cmake -S hermes -B build_hdb -DHERMES_STATIC_LINK=ON -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_FLAGS=-s -DCMAKE_C_FLAGS=-s \
+          -DCMAKE_EXE_LINKER_FLAGS="-Wl,--whole-archive -lpthread -Wl,--no-whole-archive"
+        cmake -S hermes -B build -DHERMES_STATIC_LINK=ON -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_FLAGS=-s -DCMAKE_C_FLAGS=-s \
+          -DCMAKE_EXE_LINKER_FLAGS="-Wl,--whole-archive -lpthread -Wl,--no-whole-archive" \
+          -DHERMES_ENABLE_DEBUGGER=False
+        cmake --build build_hdb --target hdb
+        cmake --build build --target hermes hvm hbcdump hermesc
+    - name: Create CLI tarball
+      run: |-
+        mkdir output staging
+        cp build/bin/hermes build/bin/hvm build/bin/hbcdump \
+          build/bin/hermesc build_hdb/bin/hdb staging
+        tar -C staging -czvf output/${TAR_NAME} .
+        shasum -a 256 output/${TAR_NAME} > output/${TAR_NAME}.sha256
+      env:
+        TAR_NAME: hermes-cli-linux.tar.gz
+    - uses: actions/upload-artifact@v4.3.1
+      with:
+        name: linux-hermes
+        path: output
+  macos:
+    runs-on: macos-14
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 16.2
+    - uses: actions/checkout@v4.1.0
+      with:
+        path: hermes
+    - name: Install dependencies
+      run: brew install cmake ninja
+    - name: Build macOS CLI
+      run: |-
+        cmake -S hermes -B build -G Ninja ${RELEASE_FLAGS} -DHERMES_ENABLE_DEBUGGER=False
+        cmake --build ./build --target hermes hvm hbcdump hermesc
+        cmake -S hermes -B build_hdb -G Ninja ${RELEASE_FLAGS}
+        cmake --build ./build_hdb --target hdb
+      env:
+        RELEASE_FLAGS: "-DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=True -DCMAKE_OSX_ARCHITECTURES=x86_64;arm64 \\ -DBUILD_SHARED_LIBS=OFF -DHERMES_BUILD_SHARED_JSI=OFF"
+    - name: Create CLI tarball
+      run: |-
+        mkdir output staging
+        cp build/bin/hermes build/bin/hvm build/bin/hbcdump \
+          build/bin/hermesc build_hdb/bin/hdb staging
+        tar -C staging -czvf output/${TAR_NAME} .
+        shasum -a 256 output/${TAR_NAME} > output/${TAR_NAME}.sha256
+      env:
+        TAR_NAME: hermes-cli-darwin.tar.gz
+    - uses: actions/upload-artifact@v4.3.1
+      with:
+        name: macos-hermes
+        path: output
+  build-apple-runtime:
+    runs-on: macos-14
+    env:
+      TERM: dumb
+      HERMES_WS_DIR: "/tmp/hermes"
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 16.2
+    - uses: actions/checkout@v4.1.0
+    - name: Cache setup
+      uses: actions/cache@v4
+      with:
+        key: v4-repo-${{ github.sha }}
+        path: |-
+          build_iphoneos
+          build_catalyst
+          build_iphonesimulator
+          destroot
+    - name: Set up workspace
+      run: mkdir -p /tmp/hermes/output
+    - name: Install dependencies
+      run: |-
+        brew install cmake ninja
+        sudo gem install cocoapods
+    - name: Build the iOS frameworks
+      run: "./utils/build-ios-framework.sh"
+  package-apple-runtime:
+    runs-on: macos-14
+    needs:
+    - build-apple-runtime
+    env:
+      TERM: dumb
+      HERMES_WS_DIR: "/tmp/hermes"
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 16.2
+    - uses: actions/checkout@v4.1.0
+    - name: Cache setup
+      uses: actions/cache@v4
+      with:
+        key: v4-repo-${{ github.sha }}
+        path: |-
+          build_iphoneos
+          build_catalyst
+          build_iphonesimulator
+          destroot
+    - name: Set up workspace
+      run: mkdir -p /tmp/hermes/output
+    - name: Install dependencies
+      run: |-
+        brew install cmake ninja
+        sudo gem install cocoapods
+    - name: Package the framework
+      run: |-
+        . ./utils/build-apple-framework.sh
+        mkdir -p /tmp/cocoapods-package-root/destroot
+        cp -R ./destroot /tmp/cocoapods-package-root
+        cp hermes-engine.podspec LICENSE /tmp/cocoapods-package-root
+        tar -C /tmp/cocoapods-package-root/ -czvf /tmp/hermes/output/hermes-runtime-darwin-v$(get_release_version).tar.gz .
+    - name: Checksum artifacts
+      run: |-
+        cd /tmp/hermes/output
+        for file in *
+        do
+          shasum -a 256 "$file" > "$file.sha256"
+        done
+    - uses: actions/upload-artifact@v4.3.1
+      with:
+        name: apple-runtime
+        path: /tmp/hermes/output/
+  npm:
+    runs-on: ubuntu-20.04
+    needs:
+    - android
+    - linux
+    - package-apple-runtime
+    - macos
+    env:
+      YARN: yarnpkg
+      TERM: dumb
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+    - uses: actions/setup-node@v4.0.2
+    - name: Print versions
+      run: |-
+        node --version
+        yarn --version
+    - name: Install dependencies and set up
+      run: mkdir -p /tmp/hermes/output
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/download-artifact@v4.1.3
+    - name: Build NPM
+      run: |-
+        ls -lR
+        cd npm
+        cp ../macos-hermes/* .
+        cp ../android-hermes/* .
+        cp ../apple-runtime/* .
+        cp ../linux-hermes/* .
+        yarn install
+        yarn unpack-builds
+        yarn create-npms
+    - name: Copy artifacts
+      run: |-
+        cd npm
+        cp *.tgz /tmp/hermes/output
+    - name: Checksum artifacts
+      run: |-
+        cd /tmp/hermes/output
+        for file in *
+        do
+          sha256sum "$file" > "$file.sha256"
+        done
+    - uses: actions/upload-artifact@v4.3.1
+      with:
+        name: npm-hermes
+        path: /tmp/hermes/output
