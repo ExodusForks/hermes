@@ -100,7 +100,8 @@ function create_universal_framework {
   echo "Creating universal framework for platforms: ${platforms[*]}"
 
   for i in "${!platforms[@]}"; do
-    args+="-framework ${platforms[$i]}/hermes.framework "
+    args+="-framework $(readlink -f ${platforms[$i]}/hermes.framework) "
+    args+="-debug-symbols $(readlink -f ${platforms[$i]}/hermes.framework.dSYM) "
   done
 
   mkdir universal
