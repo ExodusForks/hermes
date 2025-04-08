@@ -137,6 +137,8 @@ jobs:
         sudo gem install cocoapods
     - name: Build the iOS frameworks
       run: "./utils/build-ios-framework.sh"
+    - name: Build the Mac frameworks
+      run: "./utils/build-mac-framework.sh"
   package-apple-runtime:
     runs-on: macos-14
     needs:
