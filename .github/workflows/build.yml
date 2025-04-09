@@ -186,7 +186,7 @@ jobs:
         name: apple-runtime
         path: /tmp/hermes/output/
   npm:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
     - android
     - linux
