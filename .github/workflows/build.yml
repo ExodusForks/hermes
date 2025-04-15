@@ -12,7 +12,6 @@ jobs:
     steps:
     - name: Set up workspace and install dependencies
       run: |-
-        yes | sdkmanager "cmake;3.22.1" &
         sudo apt update && sudo apt install -y libicu-dev
     - uses: actions/checkout@v4.1.0
       with:

@@ -12,6 +12,7 @@ buildDir.mkdirs()
 
 android {
   compileSdkVersion = rootProject.ext.compileSdkVersion
+  ndkVersion '27.2.12479018'
 
   defaultConfig {
     minSdkVersion rootProject.ext.minSdkVersion
@@ -36,7 +37,7 @@ android {
 
   externalNativeBuild {
     cmake {
-      version "3.18.1"
+      version "3.22.1"
       path "../../CMakeLists.txt"
       buildStagingDirectory = "${rootProject.ext.hermes_ws}/staging/hermes"
       buildStagingDirectory.mkdirs()
