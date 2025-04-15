@@ -21,7 +21,7 @@ jobs:
         cmake -S hermes -B build
         # Build the Hermes compiler so that the cross compiler build can
         # access it to build the VM
-        cmake --build ./build --target hermesc -j 4
+        cmake --build $HERMES_WS_DIR/build --target hermesc -j 4
     - name: Build Hermes for Android
       run: |-
         cd hermes/android
@@ -29,7 +29,7 @@ jobs:
     - name: Copy artifacts
       run: |-
         mkdir output
-        cp build_android/distributions/hermes-runtime-android-*.tar.gz output
+        cp $HERMES_WS_DIR/build_android/distributions/hermes-runtime-android-*.tar.gz output
     - name: Checksum artifacts
       run: |-
         cd output
