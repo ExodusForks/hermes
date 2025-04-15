@@ -10,7 +10,6 @@
   },
   "files": [
     "README.md",
-    "android/hermes-debug.aar",
     "android/hermes-release.aar",
     "android/include/**/*.h",
     "linux64-bin/hermesc",
