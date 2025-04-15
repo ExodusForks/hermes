@@ -8,7 +8,7 @@ jobs:
   android:
     runs-on: ubuntu-22.04
     env:
-      HERMES_WS_DIR: ${{ github.workspace }}
+      HERMES_WS_DIR: "/tmp/hermes"
     steps:
     - name: Set up workspace and install dependencies
       run: |-
