@@ -52,7 +52,7 @@ android {
           arguments "-DCMAKE_BUILD_TYPE=Release"
           // This overrides CMAKE_SHARED_LINKER_FLAGS, it does not 
           // append to it. This is fine for now since it is unused.
-          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--strip-all,--build-id=none"
+          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld -Wl,--strip-all,--build-id=none"
         }
       }
     }
@@ -63,7 +63,7 @@ android {
           arguments "-DCMAKE_BUILD_TYPE=MinSizeRel"
           // This overrides CMAKE_SHARED_LINKER_FLAGS, it does not 
           // append to it. This is fine for now since it is unused.
-          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--strip-all,--build-id=none"
+          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld -Wl,--strip-all,--build-id=none"
         }
       }
     }
