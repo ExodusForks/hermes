@@ -18,7 +18,7 @@ jobs:
         path: hermes
     - name: Build Hermes Compiler
       run: |-
-        cmake -S hermes -B build
+        cmake -S hermes -B $HERMES_WS_DIR/build
         # Build the Hermes compiler so that the cross compiler build can
         # access it to build the VM
         cmake --build $HERMES_WS_DIR/build --target hermesc -j 4
