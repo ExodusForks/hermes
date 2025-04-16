@@ -33,6 +33,7 @@ android {
         arguments "-DANDROID_LD=lld"
         arguments "-DIMPORT_HERMESC=${rootProject.ext.hermesC}"
         arguments "-DHERMES_SLOW_DEBUG=False"
+        arguments "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=True"
         arguments "-DHERMES_BUILD_SHARED_JSI=True"
         targets "libhermes"
       }
