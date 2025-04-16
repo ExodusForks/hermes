@@ -10,8 +10,16 @@ apply plugin: 'com.android.library'
 buildDir = "${rootProject.ext.hermes_ws}/build_android/hermes"
 buildDir.mkdirs()
 
+def getHostTag() {
+  def os = System.getProperty("os.name").toLowerCase()
+  if (os.contains("mac")) return "darwin-x86_64"
+  if (os.contains("win")) return "windows-x86_64"
+  return "linux-x86_64"
+}
+
 android {
   compileSdkVersion = rootProject.ext.compileSdkVersion
+  ndkVersion '23.1.7779620'
 
   defaultConfig {
     minSdkVersion rootProject.ext.minSdkVersion
@@ -51,7 +59,7 @@ android {
           arguments "-DCMAKE_BUILD_TYPE=Release"
           // This overrides CMAKE_SHARED_LINKER_FLAGS, it does not 
           // append to it. This is fine for now since it is unused.
-          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--strip-all"
+          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--strip-all,--build-id=none"
         }
       }
     }
@@ -62,7 +70,7 @@ android {
           arguments "-DCMAKE_BUILD_TYPE=MinSizeRel"
           // This overrides CMAKE_SHARED_LINKER_FLAGS, it does not 
           // append to it. This is fine for now since it is unused.
-          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--strip-all"
+          arguments "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--strip-all,--build-id=none"
         }
       }
     }
@@ -122,6 +130,25 @@ android {
     libhermes {
       headers "$buildDir/../outputs/include"
       libraryName "libhermes"
+    }
+  }
+
+  tasks.whenTaskAdded { task ->
+    if (task.name.startsWith("externalNativeBuild")) {
+      task.doLast {
+        rootProject.ext.abis.each { abi ->
+          def soDir = file("${buildDir}/intermediates/cmake/intlRelease/obj/${abi}")
+          if (soDir.exists()) {
+            soDir.eachFileMatch(~/.*\.so/) { File soFile ->
+              println "Stripping ${soFile.name} for ABI ${abi}"
+              exec {
+                executable "${android.ndkDirectory}/toolchains/llvm/prebuilt/${getHostTag()}/bin/llvm-strip"
+                args "--strip-all", soFile.absolutePath
+              }
+            }
+          }
+        }
+      }
     }
   }
 
