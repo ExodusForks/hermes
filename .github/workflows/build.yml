@@ -129,7 +129,7 @@ jobs:
           build_iphonesimulator
           destroot
     - name: Set up workspace
-      run: mkdir -p /tmp/hermes/output
+      run: mkdir -p $HERMES_WS_DIR/output
     - name: Install dependencies
       run: |-
         brew install cmake ninja
@@ -161,7 +161,7 @@ jobs:
           build_iphonesimulator
           destroot
     - name: Set up workspace
-      run: mkdir -p /tmp/hermes/output
+      run: mkdir -p $HERMES_WS_DIR/output
     - name: Install dependencies
       run: |-
         brew install cmake ninja
@@ -172,10 +172,10 @@ jobs:
         mkdir -p /tmp/cocoapods-package-root/destroot
         cp -R ./destroot /tmp/cocoapods-package-root
         cp hermes-engine.podspec LICENSE /tmp/cocoapods-package-root
-        tar -C /tmp/cocoapods-package-root/ -czvf /tmp/hermes/output/hermes-runtime-darwin-v$(get_release_version).tar.gz .
+        tar -C /tmp/cocoapods-package-root/ -czvf $HERMES_WS_DIR/output/hermes-runtime-darwin-v$(get_release_version).tar.gz .
     - name: Checksum artifacts
       run: |-
-        cd /tmp/hermes/output
+        cd $HERMES_WS_DIR/output
         for file in *
         do
           shasum -a 256 "$file" > "$file.sha256"
@@ -183,7 +183,7 @@ jobs:
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: apple-runtime
-        path: /tmp/hermes/output/
+        path: $HERMES_WS_DIR/output/
   npm:
     runs-on: ubuntu-22.04
     needs:
@@ -194,6 +194,7 @@ jobs:
     env:
       YARN: yarnpkg
       TERM: dumb
+      HERMES_WS_DIR: "/tmp/hermes"
       DEBIAN_FRONTEND: noninteractive
     steps:
     - uses: actions/setup-node@v4.0.2
@@ -202,7 +203,7 @@ jobs:
         node --version
         yarn --version
     - name: Install dependencies and set up
-      run: mkdir -p /tmp/hermes/output
+      run: mkdir -p $HERMES_WS_DIR/output
     - uses: actions/checkout@v4.1.0
     - uses: actions/download-artifact@v4.1.3
     - name: Build NPM
@@ -219,10 +220,10 @@ jobs:
     - name: Copy artifacts
       run: |-
         cd npm
-        cp *.tgz /tmp/hermes/output
+        cp *.tgz $HERMES_WS_DIR/output
     - name: Checksum artifacts
       run: |-
-        cd /tmp/hermes/output
+        cd $HERMES_WS_DIR/output
         for file in *
         do
           sha256sum "$file" > "$file.sha256"
@@ -230,4 +231,4 @@ jobs:
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: npm-hermes
-        path: /tmp/hermes/output
+        path: $HERMES_WS_DIR/output
