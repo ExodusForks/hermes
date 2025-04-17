@@ -144,7 +144,7 @@ jobs:
       run: "./utils/build-ios-framework.sh"
       working-directory: ${{ env.HERMES_WS_DIR }}/source
     - name: Build the Mac frameworks
-      run: ".utils/build-mac-framework.sh"
+      run: "./utils/build-mac-framework.sh"
       working-directory: ${{ env.HERMES_WS_DIR }}/source
     - name: Package the framework
       run: |-
