@@ -15,7 +15,7 @@ jobs:
         sudo apt update && sudo apt install -y libicu-dev
     - uses: actions/checkout@v4.1.0
       with:
-        path: $HERMES_WS_DIR/source
+        path: /tmp/hermes/source
     - name: Build Hermes Compiler
       run: |-
         cmake -S $HERMES_WS_DIR/source -B $HERMES_WS_DIR/build
@@ -51,7 +51,7 @@ jobs:
             libreadline-dev libicu-dev zip python3
     - uses: actions/checkout@v4.1.0
       with:
-        path: $HERMES_WS_DIR/source
+        path: /tmp/hermes/source
     - name: Build linux CLI
       run: |-
         cmake -S $HERMES_WS_DIR/source -B build_hdb -DHERMES_STATIC_LINK=ON -DCMAKE_BUILD_TYPE=Release \
@@ -89,7 +89,7 @@ jobs:
         xcode-version: 16.2
     - uses: actions/checkout@v4.1.0
       with:
-        path: $HERMES_WS_DIR/source
+        path: /tmp/hermes/source
     - name: Install dependencies
       run: brew install cmake ninja
     - name: Build macOS CLI
@@ -126,7 +126,7 @@ jobs:
         xcode-version: 16.2
     - uses: actions/checkout@v4.1.0
       with:
-        path: $HERMES_WS_DIR/source
+        path: /tmp/hermes/source
     - name: Cache setup
       uses: actions/cache@v4
       with:
@@ -161,7 +161,7 @@ jobs:
         xcode-version: 16.2
     - uses: actions/checkout@v4.1.0
       with:
-        path: $HERMES_WS_DIR/source
+        path: /tmp/hermes/source
     - name: Cache setup
       uses: actions/cache@v4
       with:
@@ -193,7 +193,7 @@ jobs:
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: apple-runtime
-        path: $HERMES_WS_DIR/output/
+        path: /tmp/hermes/output/
 
   npm:
     runs-on: ubuntu-22.04
@@ -217,7 +217,7 @@ jobs:
       run: mkdir -p $HERMES_WS_DIR/output
     - uses: actions/checkout@v4.1.0
       with:
-        path: $HERMES_WS_DIR/source
+        path: /tmp/hermes/source
     - uses: actions/download-artifact@v4.1.3
     - name: Build NPM
       run: |-
@@ -243,4 +243,4 @@ jobs:
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: npm-hermes
-        path: $HERMES_WS_DIR/output
+        path: /tmp/hermes/output
