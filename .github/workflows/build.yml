@@ -100,25 +100,24 @@ jobs:
       run: brew install cmake ninja
     - name: Build macOS CLI
       run: |-
-        cmake -S $HERMES_WS_DIR/source -B build -G Ninja ${RELEASE_FLAGS} -DHERMES_ENABLE_DEBUGGER=False
-        cmake --build ./build --target hermes hvm hbcdump hermesc
-        cmake -S $HERMES_WS_DIR/source -B build_hdb -G Ninja ${RELEASE_FLAGS}
-        cmake --build ./build_hdb --target hdb
+        cmake -S $HERMES_WS_DIR/source -B $HERMES_WS_DIR/build_macos -G Ninja ${RELEASE_FLAGS} -DHERMES_ENABLE_DEBUGGER=False
+        cmake --build $HERMES_WS_DIR/build_macos --target hermes hvm hbcdump hermesc
+      working-directory: ${{ env.HERMES_WS_DIR }}/source
       env:
         RELEASE_FLAGS: "-DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=True -DCMAKE_OSX_ARCHITECTURES=x86_64;arm64 \\ -DBUILD_SHARED_LIBS=OFF -DHERMES_BUILD_SHARED_JSI=OFF"
     - name: Create CLI tarball
       run: |-
-        mkdir output staging
-        cp build/bin/hermes build/bin/hvm build/bin/hbcdump \
-          build/bin/hermesc build_hdb/bin/hdb staging
-        tar -C staging -czvf output/${TAR_NAME} .
-        shasum -a 256 output/${TAR_NAME} > output/${TAR_NAME}.sha256
+        mkdir staging
+        cp $HERMES_WS_DIR/build_macos/bin/{hermes,hvm,hbcdump,hermesc} staging
+        tar -C staging -czvf $HERMES_WS_DIR/output/${TAR_NAME} .
+        shasum -a 256 $HERMES_WS_DIR/output/${TAR_NAME} > $HERMES_WS_DIR/output/${TAR_NAME}.sha256
+      working-directory: ${{ env.HERMES_WS_DIR }}/source
       env:
         TAR_NAME: hermes-cli-darwin.tar.gz
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: macos-hermes
-        path: output
+        path: ${{ env.HERMES_WS_DIR }}/output
 
   build-apple-runtime:
     runs-on: macos-latest
@@ -135,15 +134,6 @@ jobs:
       run: |-
         mkdir -p $HERMES_WS_DIR
         cp -r $GITHUB_WORKSPACE $HERMES_WS_DIR/source
-    - name: Cache setup
-      uses: actions/cache@v4
-      with:
-        key: v4-repo-${{ github.sha }}
-        path: |-
-          build_iphoneos
-          build_catalyst
-          build_iphonesimulator
-          destroot
     - name: Set up workspace
       run: mkdir -p $HERMES_WS_DIR/output
     - name: Install dependencies
@@ -151,55 +141,25 @@ jobs:
         brew install cmake ninja
         sudo gem install cocoapods
     - name: Build the iOS frameworks
-      run: "$HERMES_WS_DIR/source/utils/build-ios-framework.sh"
+      run: "./utils/build-ios-framework.sh"
+      working-directory: ${{ env.HERMES_WS_DIR }}/source
     - name: Build the Mac frameworks
-      run: "$HERMES_WS_DIR/source/utils/build-mac-framework.sh"
-
-  package-apple-runtime:
-    runs-on: macos-latest
-    needs:
-      - build-apple-runtime
-    env:
-      TERM: dumb
-      HERMES_WS_DIR: "/tmp/hermes"
-      HOMEBREW_NO_AUTO_UPDATE: 1
-    steps:
-    - uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: 16.2
-    - uses: actions/checkout@v4.1.0
-    - name: Copy source to $HERMES_WS_DIR/source
-      run: |-
-        mkdir -p $HERMES_WS_DIR
-        cp -r $GITHUB_WORKSPACE $HERMES_WS_DIR/source
-    - name: Cache setup
-      uses: actions/cache@v4
-      with:
-        key: v4-repo-${{ github.sha }}
-        path: |-
-          build_iphoneos
-          build_catalyst
-          build_iphonesimulator
-          destroot
-    - name: Set up workspace
-      run: mkdir -p $HERMES_WS_DIR/output
-    - name: Install dependencies
-      run: |-
-        brew install cmake ninja
-        sudo gem install cocoapods
+      run: ".utils/build-mac-framework.sh"
+      working-directory: ${{ env.HERMES_WS_DIR }}/source
     - name: Package the framework
       run: |-
-        . $HERMES_WS_DIR/source/utils/build-apple-framework.sh
+        . ./utils/build-apple-framework.sh
         mkdir -p /tmp/cocoapods-package-root/destroot
         cp -R ./destroot /tmp/cocoapods-package-root
-        cp $HERMES_WS_DIR/source/hermes-engine.podspec $HERMES_WS_DIR/source/LICENSE /tmp/cocoapods-package-root
+        cp hermes-engine.podspec LICENSE /tmp/cocoapods-package-root
         tar -C /tmp/cocoapods-package-root/ -czvf $HERMES_WS_DIR/output/hermes-runtime-darwin-v$(get_release_version).tar.gz .
+      working-directory: ${{ env.HERMES_WS_DIR }}/source
     - name: Checksum artifacts
       run: |-
-        cd $HERMES_WS_DIR/output
         for file in *; do
           shasum -a 256 "$file" > "$file.sha256"
         done
+      working-directory: ${{ env.HERMES_WS_DIR }}/output
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: apple-runtime
@@ -210,7 +170,7 @@ jobs:
     needs:
       - android
       - linux
-      - package-apple-runtime
+      - build-apple-runtime
       - macos
     env:
       YARN: yarnpkg
