@@ -193,7 +193,7 @@ jobs:
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: apple-runtime
-        path: /tmp/hermes/output/
+        path: ${{ env.$HERMES_WS_DIR }}/output/
 
   npm:
     runs-on: ubuntu-22.04
@@ -243,4 +243,4 @@ jobs:
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: npm-hermes
-        path: /tmp/hermes/output
+        path: ${{ env.$HERMES_WS_DIR }}/output
