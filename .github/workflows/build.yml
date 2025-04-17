@@ -96,6 +96,8 @@ jobs:
       run: |-
         mkdir -p $HERMES_WS_DIR
         cp -r $GITHUB_WORKSPACE $HERMES_WS_DIR/source
+    - name: Set up workspace
+      run: mkdir -p $HERMES_WS_DIR/output
     - name: Install dependencies
       run: brew install cmake ninja
     - name: Build macOS CLI
@@ -109,11 +111,10 @@ jobs:
       run: |-
         mkdir staging
         cp $HERMES_WS_DIR/build_macos/bin/{hermes,hvm,hbcdump,hermesc} staging
-        tar -C staging -czvf $HERMES_WS_DIR/output/${TAR_NAME} .
-        shasum -a 256 $HERMES_WS_DIR/output/${TAR_NAME} > $HERMES_WS_DIR/output/${TAR_NAME}.sha256
+        TARBALL=$HERMES_WS_DIR/output/hermes-cli-darwin.tar.gz
+        tar -C staging -czvf $TARBALL .
+        shasum -a 256 $TARBALL > $TARBALL.sha256
       working-directory: ${{ env.HERMES_WS_DIR }}/source
-      env:
-        TAR_NAME: hermes-cli-darwin.tar.gz
     - uses: actions/upload-artifact@v4.3.1
       with:
         name: macos-hermes
