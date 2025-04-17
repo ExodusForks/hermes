@@ -82,7 +82,7 @@ jobs:
         path: output
 
   macos:
-    runs-on: macos-latest
+    runs-on: macos-15
     env:
       TERM: dumb
       HERMES_WS_DIR: "/tmp/hermes"
@@ -121,7 +121,7 @@ jobs:
         path: ${{ env.HERMES_WS_DIR }}/output
 
   build-apple-runtime:
-    runs-on: macos-latest
+    runs-on: macos-15
     env:
       TERM: dumb
       HERMES_WS_DIR: "/tmp/hermes"
