@@ -199,7 +199,6 @@ jobs:
     - uses: actions/download-artifact@v4.1.3
     - name: Build NPM
       run: |-
-        ls -lR
         cd $HERMES_WS_DIR/source/npm
         cp ../macos-hermes/* .
         cp ../android-hermes/* .
