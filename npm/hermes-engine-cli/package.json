@@ -11,11 +11,9 @@
   "files": [
     "README.md",
     "linux64-bin/hbcdump",
-    "linux64-bin/hdb",
     "linux64-bin/hermes",
     "linux64-bin/hermesc",
     "osx-bin/hbcdump",
-    "osx-bin/hdb",
     "osx-bin/hermes",
     "osx-bin/hermesc"
   ]
