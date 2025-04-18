@@ -99,7 +99,10 @@ jobs:
     - name: Set up workspace
       run: mkdir -p $HERMES_WS_DIR/output
     - name: Install dependencies
-      run: brew install cmake ninja
+      run: |-
+        brew install ninja
+        ninja --version
+        cmake --version
     - name: Build macOS CLI
       run: |-
         cmake -S $HERMES_WS_DIR/source -B $HERMES_WS_DIR/build_macos -G Ninja ${RELEASE_FLAGS} -DHERMES_ENABLE_DEBUGGER=False
@@ -139,8 +142,10 @@ jobs:
       run: mkdir -p $HERMES_WS_DIR/output
     - name: Install dependencies
       run: |-
-        brew install cmake ninja
+        brew install ninja
         sudo gem install cocoapods
+        ninja --version
+        cmake --version
     - name: Build the iOS frameworks
       run: "./utils/build-ios-framework.sh"
       working-directory: ${{ env.HERMES_WS_DIR }}/source
