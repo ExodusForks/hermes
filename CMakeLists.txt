@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-cmake_minimum_required(VERSION 3.13.0)
+cmake_minimum_required(VERSION 3.13.0...3.31.6)
 
 # Set the VERSION variables based on the project command
 if (POLICY CMP0048)
