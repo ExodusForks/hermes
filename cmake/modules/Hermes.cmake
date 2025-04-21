@@ -102,7 +102,7 @@ function(add_hermes_library name)
     target_compile_options(${name} PUBLIC "-fembed-bitcode")
   endif ()
   # Strip the LC_UUID from the framework binary
-  target_link_options(${name} PRIVATE "-Wl,-no_uuid")
+  # target_link_options(${name} PRIVATE "-Wl,-no_uuid")
 endfunction(add_hermes_library)
 
 function(add_hermes_executable name)
