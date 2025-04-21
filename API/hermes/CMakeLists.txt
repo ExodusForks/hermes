@@ -109,11 +109,11 @@ target_include_directories(libhermes PUBLIC .. ../../public ${HERMES_JSI_DIR})
 set_target_properties(libhermes PROPERTIES OUTPUT_NAME hermes)
 
 # Create a lean version of libhermes in the same way.
-add_library(libhermes_lean ${api_sources})
-target_link_libraries(libhermes_lean PUBLIC jsi PRIVATE hermesVMRuntimeLean ${INSPECTOR_DEPS})
-target_link_options(libhermes_lean PRIVATE ${HERMES_EXTRA_LINKER_FLAGS})
-target_include_directories(libhermes_lean PUBLIC .. ../../public ${HERMES_JSI_DIR})
-set_target_properties(libhermes_lean PROPERTIES OUTPUT_NAME hermes_lean)
+# add_library(libhermes_lean ${api_sources})
+# target_link_libraries(libhermes_lean PUBLIC jsi PRIVATE hermesVMRuntimeLean ${INSPECTOR_DEPS})
+# target_link_options(libhermes_lean PRIVATE ${HERMES_EXTRA_LINKER_FLAGS})
+# target_include_directories(libhermes_lean PUBLIC .. ../../public ${HERMES_JSI_DIR})
+# set_target_properties(libhermes_lean PROPERTIES OUTPUT_NAME hermes_lean)
 
 if(APPLE AND HERMES_BUILD_APPLE_FRAMEWORK)
   set_target_properties(libhermes PROPERTIES
