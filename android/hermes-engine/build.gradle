@@ -19,6 +19,7 @@ def getHostTag() {
 
 android {
   compileSdkVersion = rootProject.ext.compileSdkVersion
+  ndkVersion = '27.2.12479018'
 
   defaultConfig {
     minSdkVersion rootProject.ext.minSdkVersion
@@ -132,7 +133,7 @@ android {
       libraryName "libhermes"
     }
   }
-  
+
   tasks.whenTaskAdded { task ->
     if (task.name.startsWith("externalNativeBuild")) {
       task.doLast {
