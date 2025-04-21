@@ -136,6 +136,8 @@ if(APPLE AND HERMES_BUILD_APPLE_FRAMEWORK)
     target_compile_options(libhermes PUBLIC "-fembed-bitcode")
     target_link_options(libhermes PUBLIC "-fembed-bitcode")
   endif()
+  # Strip the LC_UUID from the framework binary
+  target_link_options(libhermes PRIVATE "-Wl,-no_uuid")
   # Define the deployment target in the frameworks metadata
   if(HERMES_APPLE_TARGET_PLATFORM MATCHES "iphone")
     add_custom_command(TARGET libhermes POST_BUILD
