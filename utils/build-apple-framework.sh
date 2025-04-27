@@ -7,7 +7,7 @@
 if [ "$DEBUG" = true ]; then
   BUILD_TYPE="Debug"
 else
-  BUILD_TYPE="Release"
+  BUILD_TYPE="MinSizeRel"
 fi
 
 function command_exists {
