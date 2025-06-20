@@ -14,17 +14,6 @@ function command_exists {
   command -v "${1}" > /dev/null 2>&1
 }
 
-if command_exists "cmake"; then
-  if command_exists "ninja"; then
-    BUILD_SYSTEM="Ninja"
-  else
-    BUILD_SYSTEM="Unix Makefiles"
-  fi
-else
-  echo >&2 'CMake is required to install Hermes, install it with: brew install cmake'
-  exit 1
-fi
-
 function get_release_version {
   ruby -rcocoapods-core -rjson -e "puts Pod::Specification.from_file('hermes-engine.podspec').version"
 }
@@ -61,7 +50,7 @@ function configure_apple_framework {
     build_cli_tools="false"
   fi
 
-  cmake -S . -B "build_$1" -G "$BUILD_SYSTEM" \
+  cmake -S . -B "build_$1" \
     -DHERMES_APPLE_TARGET_PLATFORM:STRING="$1" \
     -DCMAKE_OSX_ARCHITECTURES:STRING="$2" \
     -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="$3" \
