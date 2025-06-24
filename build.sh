@@ -95,8 +95,8 @@ build_apple_runtime() {
   cmake --version
 
   cd "$HERMES_WS_DIR/source"
-  #./utils/build-ios-framework.sh
-  #./utils/build-mac-framework.sh
+  ./utils/build-ios-framework.sh
+  ./utils/build-mac-framework.sh
   . ./utils/build-apple-framework.sh
 
   mkdir -p /tmp/cocoapods-package-root/destroot
