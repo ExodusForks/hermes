@@ -6,8 +6,7 @@ export HERMES_WS_DIR="/tmp/hermes"
 
 prepare_workspace() {
   mkdir -p "$HERMES_WS_DIR"
-  # TODO: uncomment me
-  #cp -r "$(pwd)" "$HERMES_WS_DIR/source"
+  cp -r "$(pwd)" "$HERMES_WS_DIR/source"
 }
 
 android_build() {
