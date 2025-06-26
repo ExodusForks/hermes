@@ -50,7 +50,15 @@ function configure_apple_framework {
     build_cli_tools="false"
   fi
 
+
+  xcode_15_flags=""
+  xcode_major_version=$(xcodebuild -version | grep -oE '[0-9]*' | head -n 1)
+  if [[ $xcode_major_version -ge 15 ]]; then
+    xcode_15_flags="LINKER:-ld_classic"
+  fi
+
   cmake -S . -B "build_$1" \
+    -DHERMES_EXTRA_LINKER_FLAGS="$xcode_15_flags" \
     -DHERMES_APPLE_TARGET_PLATFORM:STRING="$1" \
     -DCMAKE_OSX_ARCHITECTURES:STRING="$2" \
     -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="$3" \
