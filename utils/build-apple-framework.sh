@@ -42,7 +42,13 @@ function build_host_hermesc {
 
 # Utility function to configure an Apple framework
 function configure_apple_framework {
-  local build_cli_tools
+  local build_cli_tools enable_debugger xcode_15_flags xcode_major_version
+
+  if [[ $BUILD_TYPE == "Debug" ]]; then
+    enable_debugger="true"
+  else
+    enable_debugger="false"
+  fi
 
   if [[ $1 == macosx ]]; then
     build_cli_tools="true"
@@ -62,7 +68,7 @@ function configure_apple_framework {
     -DHERMES_APPLE_TARGET_PLATFORM:STRING="$1" \
     -DCMAKE_OSX_ARCHITECTURES:STRING="$2" \
     -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="$3" \
-    -DHERMES_ENABLE_DEBUGGER:BOOLEAN=true \
+    -DHERMES_ENABLE_DEBUGGER:BOOLEAN="$enable_debugger" \
     -DHERMES_ENABLE_INTL:BOOLEAN=true \
     -DHERMES_ENABLE_LIBFUZZER:BOOLEAN=false \
     -DHERMES_ENABLE_FUZZILLI:BOOLEAN=false \
