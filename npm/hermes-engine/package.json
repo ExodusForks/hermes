@@ -11,8 +11,6 @@
   "files": [
     "README.md",
     "android/hermes-release.aar",
-    "android/include/**/*.h",
-    "linux64-bin/hermesc",
-    "osx-bin/hermesc"
+    "android/include/**/*.h"
   ]
 }
