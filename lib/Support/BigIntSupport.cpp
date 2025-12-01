@@ -1788,32 +1788,41 @@ static OperationStatus compute(
     return OperationStatus::DIVISION_BY_ZERO;
   }
 
-  // tcDivide operates on unsigned number, so just like multiply, the operands
-  // must be negated (and the result as well, if appropriate) if they are
-  // negative.
+  // The Knuth division algorithm operates on unsigned numbers, so just like
+  // multiply, the operands must be negated (and the result as well, if
+  // appropriate) if they are negative.
   const bool isLhsNegative = isNegative(lhs);
   const bool isRhsNegative = isNegative(rhs);
 
-  // If rhs has fewer digits than quoc/rem it must be resized.
-  const bool needToResizeRhs = rhs.numDigits < resultSize;
+  // Fast path: if |lhs| < |rhs|, quotient is 0 and remainder is lhs
+  // In canonical form, fewer digits always means smaller absolute value
+  if (lhs.numDigits < rhs.numDigits) {
+    quoc.numDigits = 0;
+    auto res = initWithDigits(rem, lhs);
+    if (LLVM_UNLIKELY(res != OperationStatus::RETURNED)) {
+      return res;
+    }
+    ensureCanonicalResult(rem);
+    return OperationStatus::RETURNED;
+  }
 
-  // Figure out which temporary buffers are needed -- this determines how much
-  // temporary storage will be allocated for the division.
+  // At this point, lhs.numDigits >= rhs.numDigits (fast path handled the < case)
+  // We only need temps for negation (can't modify const inputs)
+
+  // Figure out which temporary buffers are needed
   const bool needTmpQuoc = quoc.digits == nullptr;
   const bool needTmpRem = rem.digits == nullptr;
-  const bool needTmpRhs = isRhsNegative || needToResizeRhs;
 
-  uint32_t tmpStorageSizeScratch = resultSize;
+  // Temps only needed for negation (can't modify const inputs)
+  uint32_t tmpStorageSizeLhs = isLhsNegative ? lhs.numDigits : 0;
   uint32_t tmpStorageSizeQuoc = needTmpQuoc ? resultSize : 0;
   uint32_t tmpStorageSizeRem = needTmpRem ? resultSize : 0;
-  uint32_t tmpStorageSizeRhs = needTmpRhs ? resultSize : 0;
+  uint32_t tmpStorageSizeRhs = isRhsNegative ? rhs.numDigits : 0;
 
-  const uint32_t tmpStorageSize = tmpStorageSizeScratch + tmpStorageSizeQuoc +
+  const uint32_t tmpStorageSize = tmpStorageSizeLhs + tmpStorageSizeQuoc +
       tmpStorageSizeRem + tmpStorageSizeRhs;
 
   TmpStorage tmpStorage(tmpStorageSize);
-
-  BigIntDigitType *scratch = tmpStorage.requestNumDigits(tmpStorageSizeScratch);
 
   if (needTmpQuoc) {
     assert(quoc.numDigits == tmpStorageSizeQuoc);
@@ -1823,34 +1832,30 @@ static OperationStatus compute(
     rem.digits = tmpStorage.requestNumDigits(tmpStorageSizeRem);
   }
 
-  if (needTmpRhs) {
+  if (isLhsNegative) {
+    MutableBigIntRef tmpLhs{
+        tmpStorage.requestNumDigits(tmpStorageSizeLhs), tmpStorageSizeLhs};
+    auto res = initNonCanonicalWithReadOnlyBigInt(tmpLhs, lhs);
+    assert(res == OperationStatus::RETURNED && "temporary array is too small");
+    (void)res;
+    llvh::APInt::tcNegate(tmpLhs.digits, tmpLhs.numDigits);
+    lhs = ImmutableBigIntRef{tmpLhs.digits, tmpLhs.numDigits};
+  }
+
+  if (isRhsNegative) {
     MutableBigIntRef tmpRhs{
         tmpStorage.requestNumDigits(tmpStorageSizeRhs), tmpStorageSizeRhs};
     auto res = initNonCanonicalWithReadOnlyBigInt(tmpRhs, rhs);
     assert(res == OperationStatus::RETURNED && "temporary array is too small");
     (void)res;
-    if (isRhsNegative) {
-      llvh::APInt::tcNegate(tmpRhs.digits, tmpRhs.numDigits);
-    }
+    llvh::APInt::tcNegate(tmpRhs.digits, tmpRhs.numDigits);
     rhs = ImmutableBigIntRef{tmpRhs.digits, tmpRhs.numDigits};
   }
 
-  // tcDivide is in-place (i.e. quoc is lhs), so division will be expressed as
-  //
-  // quoc = signExt(lhs)
-  // quoc, rem, scratch /= signExt(rhs)
-  auto res = initNonCanonicalWithReadOnlyBigInt(quoc, lhs);
-  assert(res == OperationStatus::RETURNED && "quoc array is too small");
-  (void)res;
-
-  // lhs can't be modified, but it has been sign-extended into quoc; thus, if
-  // lhs < 0 negate quoc.
-  if (isLhsNegative) {
-    llvh::APInt::tcNegate(quoc.digits, quoc.numDigits);
-  }
-
-  llvh::APInt::tcDivide(
-      quoc.digits, rhs.digits, rem.digits, scratch, resultSize);
+  // Call the Knuth division algorithm with the (possibly padded/negated) operands
+  // lhsWords must be >= rhsWords, which is guaranteed by padding lhs when needed
+  llvh::APInt::divide(
+      lhs.digits, lhs.numDigits, rhs.digits, rhs.numDigits, quoc.digits, rem.digits);
 
   // post-process quoc if no space was allocated for it in the temporary storage
   // -- i.e., the caller wants the quoc.
