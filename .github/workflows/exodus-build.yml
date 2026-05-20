@@ -1,0 +1,53 @@
+name: exodus-build
+
+# Manually-triggered build pipeline for @exodus/hermes-engine release artifacts.
+#
+# Why this exists: V1's upstream `rn-build-hermes.yml` is gated to
+# `github.repository == 'facebook/hermes'` and publishes to Maven Central
+# via Sonatype credentials we don't have. This workflow reuses V1's
+# `build-*` reusable workflows (which DO work on a fork) and just leaves
+# the artifacts uploaded for us to pull down with `gh run download`.
+#
+# After a successful run, fetch artifacts locally:
+#   gh run download <run-id> --repo ExodusForks/hermes
+# The interesting outputs are:
+#   - hermes-darwin-bin-Release   → ios.tar.gz (rename + reattach to GH release)
+#   - hermes-darwin-bin-Debug     → (debug iOS tarball; not strictly needed
+#                                    since Maven Central serves the V1 debug
+#                                    tarball at hermes-ios-250829098.0.10)
+#   - maven-local                 → contains hermes-release.aar + hermes-debug.aar
+#   - hermes-dSYM-{Debug,Release} → symbolication
+#
+# The facebook/hermes/build workflow on this branch will always fail because
+# our 0013 patch (EnableEval=false) breaks the eval/Function unit tests by
+# design. That failure is expected; ignore it. This workflow does NOT run
+# the test target.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release type passed to build-android.yml (controls the AAR version string).'
+        type: choice
+        default: dry-run
+        options:
+          - release
+          - dry-run
+
+jobs:
+  build_hermesc_apple:
+    uses: ./.github/workflows/build-hermesc-apple.yml
+
+  build_apple_slices_hermes:
+    uses: ./.github/workflows/build-apple-slices-hermes.yml
+    needs: build_hermesc_apple
+
+  build_hermes_macos:
+    uses: ./.github/workflows/build-hermes-macos.yml
+    needs: build_apple_slices_hermes
+
+  build_android:
+    uses: ./.github/workflows/build-android.yml
+    secrets: inherit
+    with:
+      release-type: ${{ inputs.release-type }}
