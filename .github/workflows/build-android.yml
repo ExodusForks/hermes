@@ -10,7 +10,11 @@ on:
 
 jobs:
   build-android:
-    runs-on: 8-core-ubuntu
+    # Upstream uses 8-core-ubuntu (custom runner label on
+    # facebook/hermes only). On ExodusForks/hermes the job would sit
+    # queued forever. ubuntu-latest is slower but works on the free
+    # hosted-runner pool.
+    runs-on: ubuntu-latest
     env:
       HERMES_WS_DIR: /home/runner/work/hermes/hermes
     container:
