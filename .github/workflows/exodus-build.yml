@@ -24,15 +24,17 @@ name: exodus-build
 # the test target.
 
 on:
-  workflow_dispatch:
-    inputs:
-      release-type:
-        description: 'Release type passed to build-android.yml (controls the AAR version string).'
-        type: choice
-        default: dry-run
-        options:
-          - release
-          - dry-run
+  # workflow_dispatch is intentionally NOT used here because GitHub
+  # requires the workflow file to be present on the default branch
+  # (exodus-fork) for it to be dispatchable. The ExodusForks org
+  # ruleset blocks direct pushes to exodus-fork, so we drive the
+  # workflow via `push` to raxodus/hermes-v1 instead. Each meaningful
+  # push to the working branch will rebuild artifacts; to manually
+  # rebuild without code changes, push an empty commit:
+  #   git commit --allow-empty -m "ci: rebuild" && git push
+  push:
+    branches:
+      - raxodus/hermes-v1
 
 jobs:
   build_hermesc_apple:
@@ -50,4 +52,7 @@ jobs:
     uses: ./.github/workflows/build-android.yml
     secrets: inherit
     with:
-      release-type: ${{ inputs.release-type }}
+      # Hard-coded because we can't take workflow_dispatch inputs on
+      # this branch. Switch back to a parameter if/when this workflow
+      # lands on the default branch.
+      release-type: dry-run
