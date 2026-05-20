@@ -122,8 +122,8 @@ HermesValue createFunctionConstructor(Runtime &runtime) {
 }
 
 CallResult<HermesValue> functionConstructor(void *, Runtime &runtime) {
-  NativeArgs args = runtime.getCurrentFrame().getNativeArgs();
-  return createDynamicFunction(runtime, args, DynamicFunctionKind::Normal);
+  return runtime.raiseSyntaxError(
+      "function constructor disabled in Hermes due to security reasons");
 }
 
 CallResult<HermesValue> functionPrototypeToString(void *, Runtime &runtime) {

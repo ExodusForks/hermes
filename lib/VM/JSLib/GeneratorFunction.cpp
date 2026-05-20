@@ -74,8 +74,8 @@ HermesValue createGeneratorFunctionConstructor(Runtime &runtime) {
 }
 
 CallResult<HermesValue> generatorFunctionConstructor(void *, Runtime &runtime) {
-  NativeArgs args = runtime.getCurrentFrame().getNativeArgs();
-  return createDynamicFunction(runtime, args, DynamicFunctionKind::Generator);
+  return runtime.raiseSyntaxError(
+      "function constructor disabled in Hermes due to security reasons");
 }
 
 } // namespace vm
