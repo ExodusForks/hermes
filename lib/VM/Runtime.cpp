@@ -274,7 +274,7 @@ Runtime::Runtime(
     // The initial heap size can't be larger than the max.
     : // thrownValue_ is Empty when there is no value currently being thrown.
       thrownValue_(HermesValue::encodeEmptyValue()),
-      enableEval(runtimeConfig.getEnableEval()),
+      enableEval(false),
       verifyEvalIR(runtimeConfig.getVerifyEvalIR()),
       optimizedEval(runtimeConfig.getOptimizedEval()),
       asyncBreakCheckInEval(runtimeConfig.getAsyncBreakCheckInEval()),
